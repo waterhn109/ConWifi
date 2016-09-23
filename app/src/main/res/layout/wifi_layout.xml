@@ -27,6 +27,17 @@
 
         <TextView android:id="@+id/wifi_result"
             android:layout_width="fill_parent" android:layout_height="wrap_content"
-            android:layout_weight="0.12" />
+            android:layout_weight="1.27" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="简单破密"
+            android:id="@+id/crack" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            android:id="@+id/crack_result" />
     </LinearLayout>
 </RelativeLayout>

